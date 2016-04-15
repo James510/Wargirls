@@ -3,11 +3,16 @@ using System.Collections;
 
 public class GameController : MonoBehaviour
 {
-    public GameObject Lander;
+    public GameObject lander;
+    public GameObject tank;
+    public GameObject hq;
+    public int hp;
+    public int ap;
 	// Use this for initialization
 	void Start ()
     {
-	
+        hp = 100;
+        ap = 100;
 	}
 	    
 	// Update is called once per frame
@@ -15,6 +20,8 @@ public class GameController : MonoBehaviour
     {
 	    if(Input.GetKeyDown(KeyCode.Alpha1))
         {
+            GameObject clone = Instantiate(tank, hq.transform.position, transform.rotation) as GameObject;
+            /*dropship
             //Debug.Log("hit");
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -27,6 +34,7 @@ public class GameController : MonoBehaviour
                     clone.SendMessage("SetTarget", hit.point);
                 }
             }
+            */
         }
 	}
 }

@@ -18,9 +18,11 @@ public class UnitManager : MonoBehaviour
     {
         enemies = GameObject.FindGameObjectsWithTag("Enemy");
         friends = GameObject.FindGameObjectsWithTag("Friendly");
-        for (int x = 0; x < friends.Length; x++)
-            friends[x].SendMessage("SetList", enemies);
-        for (int x = 0; x < enemies.Length; x++)
-            enemies[x].SendMessage("SetList", friends);
+        if(enemies.Length != 0)
+            for (int x = 0; x < friends.Length; x++)
+                friends[x].SendMessage("EnemyList", enemies);
+        if (friends.Length != 0)
+            for (int x = 0; x < enemies.Length; x++)
+                enemies[x].SendMessage("EnemyList", friends);
     }
 }
