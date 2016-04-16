@@ -5,48 +5,6 @@ using System.Collections.Generic;
 
 public class UnitAI : MonoBehaviour
 {
-    /*public int hp;
-    public int damage;
-    public float speed;
-    public float range;
-    public float fireRate;
-    public GameObject[] enemies;
-    public bool isEnemy;
-    private bool engage;
-    private float nextFire;
-    void Start()
-    {
-        if (isEnemy)
-            transform.tag = "Enemy";
-        nextFire = Time.time;
-    }
-    void Update()
-    {
-
-        transform.Translate(Vector3.right * speed / 10);
-
-
-        for (int i = 0; i < enemies.Length; i++)
-        {
-            if ((Vector3.Distance(enemies[i].transform.position, transform.position) < range) && Time.time > nextFire)
-            {
-                transform.GetChild(0).GetComponent<ParticleSystem>().Emit(1);
-                nextFire = Time.time + fireRate;
-            }
-        }
-        if (hp < 0)
-        Destroy(this.gameObject);
-    }
-    void SetList(GameObject[] other)
-    {
-        enemies = other;
-    }
-    void OnParticleCollision(GameObject other)
-    {
-        Debug.Log("Hit");
-        hp -= other.transform.parent.GetComponent<UnitAI>().damage;
-    }*/
-
     public bool selected = false;
     public int hp;
     public float speed = 5.0f;
@@ -62,8 +20,9 @@ public class UnitAI : MonoBehaviour
     private GameObject target;
     private Image healthBar;
     private int originalHP;
+    private GameObject control;
+    private bool forwards, backwards, retreat;
 
-    // Update is called once per frame
     void Start()
     {
         originalHP = hp;
@@ -95,12 +54,16 @@ public class UnitAI : MonoBehaviour
             }
             if (child.name == "Canvas")
             {
-                foreach (Transform health in child.transform)
+                foreach (Transform obj in child.transform)
                 {
-                    if (health.name == "HP")
+                    if (obj.name == "HP")
                     {
-                        healthBar = health.GetComponent<Image>();
-                    } 
+                        healthBar = obj.GetComponent<Image>();
+                    }
+                    if (obj.name == "Control")
+                    {
+                        control = obj.gameObject;
+                    }
                 }
             }
         }
@@ -157,23 +120,19 @@ public class UnitAI : MonoBehaviour
 
     void Update()
     {
-        
-
         healthBar.rectTransform.sizeDelta = new Vector2(2.9f * hp/originalHP, 0.4f);
-        if (speed < 0)
-            speed = 0;
         if (isAlive)
         {
             if (hp < 1)
             {
-                Instantiate(deathExplosionFX, transform.position, transform.rotation);
-                foreach (Transform child in transform)
-                {
-                    child.SendMessage("Deactivate");
-                }
                 isAlive = false;
             }
         }
+        if (forwards)
+            GetComponent<Rigidbody>().AddRelativeForce(Vector3.forward * speed);
+        if (backwards)
+            GetComponent<Rigidbody>().AddRelativeForce(-Vector3.forward * speed);
+        GetComponent<Rigidbody>().velocity = new Vector3(Mathf.Clamp(GetComponent<Rigidbody>().velocity.x, -5, 5), Mathf.Clamp(GetComponent<Rigidbody>().velocity.y, -5, 5), Mathf.Clamp(GetComponent<Rigidbody>().velocity.z, -5, 5));
     }
 
     void OnParticleCollision(GameObject other)
@@ -183,5 +142,47 @@ public class UnitAI : MonoBehaviour
             hp -= other.transform.parent.GetComponent<TurretScript>().damage;
             //Instantiate(explosionFX, new Vector3(transform.position.x + Random.Range(-4.0f, 4.0f), transform.position.y + Random.Range(-2.0f, 2.0f), transform.position.z + Random.Range(-4.0f, 4.0f)), transform.rotation);
         }
+    }
+
+    void Damage(int dam)
+    {
+        Debug.Log("hit");
+        hp -= dam;
+    }
+
+    void OnMouseDown()
+    {
+        if (control.activeInHierarchy == false)
+            control.SetActive(true);
+        else
+            control.SetActive(false);
+    }
+
+    void GoForwards()
+    {
+        forwards = true;
+        backwards = false;
+        retreat = false;
+    }
+
+    void GoBackwards()
+    {
+        forwards = false;
+        backwards = true;
+        retreat = false;
+    }
+
+    void GoRetreat()
+    {
+        forwards = false;
+        backwards = false;
+        retreat = true;
+    }
+
+    void GoStop()
+    {
+        forwards = false;
+        backwards = false;
+        retreat = false;
     }
 }
