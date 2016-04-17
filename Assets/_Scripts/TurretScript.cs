@@ -76,18 +76,20 @@ public class TurretScript : MonoBehaviour
 
                 for (int i = 0; i < barrels.Count; i++)
                 {
-                    float arc = 0;
-                    arc = Vector3.Distance(target.transform.position, transform.position)/10;
+                    //float arc = 0;
+                    //arc = Vector3.Distance(target.transform.position, transform.position)/10;
                     targetPos = barrels[i].transform.InverseTransformPoint(target.transform.position);
-                    barrels[i].transform.Rotate(-Vector3.right * rotSpeed * Mathf.Sign(targetPos.y + arc) * Time.deltaTime);
+                    barrels[i].transform.Rotate(-Vector3.right * rotSpeed * Mathf.Sign(targetPos.y) * Time.deltaTime);
                     if (Time.time > nextFire && (Vector3.Angle(barrels[i].transform.forward, target.transform.position - barrels[i].transform.position) < angle)) //Recalculate this for target aquisition
                     {
                         for (int x = 0; x < barrels.Count; x++)
                         {
                             transform.parent.GetComponent<Rigidbody>().AddForceAtPosition(-transform.forward * 50, transform.position);
                             //barrels[x].GetComponent<ParticleSystem>().Emit(bulletBurst);
-                            GameObject round = Instantiate(apround, new Vector3(barrels[x].transform.position.x, barrels[x].transform.position.y, barrels[x].transform.position.z), Quaternion.Euler(transform.rotation.eulerAngles.x+Random.Range(-1.0f,1.0f), 0.0f, transform.rotation.eulerAngles.z + Random.Range(-1.0f, 1.0f))) as GameObject;
-                            round.GetComponent<Rigidbody>().AddRelativeForce(barrels[x].transform.forward * 500);
+                            GameObject round = Instantiate(apround, new Vector3(barrels[x].transform.position.x, barrels[x].transform.position.y, barrels[x].transform.position.z), Quaternion.Euler(barrels[x].transform.rotation.eulerAngles.x+Random.Range(-1.0f,1.0f), 0.0f, barrels[x].transform.rotation.eulerAngles.z + Random.Range(-1.0f, 1.0f))) as GameObject;
+                            if (isEnemy)
+                                round.GetComponent<TankRound>().isEnemy = true;
+                            round.GetComponent<Rigidbody>().AddRelativeForce(barrels[x].transform.forward * 5000);
                             flash.enabled = true;
                             StartCoroutine("GunFlash");
                             smoke.Emit(100);
