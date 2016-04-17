@@ -7,26 +7,32 @@ public class UnitAI : MonoBehaviour
 {
     public bool selected = false;
     public int hp;
-    public float speed = 5.0f;
+    public float speed = 5.0f,reverseSpeed = 4.0f;
     public float maxDistance = 1000;
     public List<GameObject> turrets;
     public GameObject[] enemies;
-    public GameObject unitManager;
+    public Sprite icon;
     public GameObject explosionFX;
     public GameObject deathExplosionFX;
+    public GameObject smokeFX;
     public bool isEnemy;
     private bool hasTarget = false;
     private bool isAlive = true;
+    private GameObject unitManager;
+    private GameObject gameController;
     private GameObject target;
     private Image healthBar;
     private int originalHP;
-    private GameObject control;
     private bool forwards, backwards, retreat;
+    private bool dying = false;
+    public List<GameObject> wheels;
+    private GameObject smoke;
 
     void Start()
     {
         originalHP = hp;
         unitManager = GameObject.FindGameObjectWithTag("UnitManager");
+        gameController = GameObject.FindGameObjectWithTag("GameController");
         StartCoroutine("TargetAquisition", Random.Range(0.1f, 0.8f));
         if (isEnemy)
         {
@@ -46,7 +52,7 @@ public class UnitAI : MonoBehaviour
         int turretTemp = 0;
         foreach (Transform child in transform)
         {
-            child.gameObject.layer = 10;
+            //child.gameObject.layer = 10;
             if (child.tag == "Turret")
             {
                 turrets.Add(child.gameObject);
@@ -60,11 +66,11 @@ public class UnitAI : MonoBehaviour
                     {
                         healthBar = obj.GetComponent<Image>();
                     }
-                    if (obj.name == "Control")
-                    {
-                        control = obj.gameObject;
-                    }
                 }
+            }
+            if (child.tag == "Wheels")
+            {
+                wheels.Add(child.gameObject);
             }
         }
 
@@ -126,12 +132,20 @@ public class UnitAI : MonoBehaviour
             if (hp < 1)
             {
                 isAlive = false;
+                if(dying==false)
+                {
+                    smoke = Instantiate(smokeFX, transform.position, Quaternion.Euler(-90.0f, 0.0f, 0.0f)) as GameObject;
+                    smoke.transform.SetParent(transform);
+                    GetComponent<Rigidbody>().AddExplosionForce(10000, new Vector3(transform.position.x, transform.position.y - 1, transform.position.z), 10);
+                    dying = true;
+                }
+                smoke.transform.rotation = Quaternion.Euler(-90.0f, 0.0f, 0.0f);
             }
         }
         if (forwards)
             GetComponent<Rigidbody>().AddRelativeForce(Vector3.forward * speed);
         if (backwards)
-            GetComponent<Rigidbody>().AddRelativeForce(-Vector3.forward * speed);
+            GetComponent<Rigidbody>().AddRelativeForce(-Vector3.forward * reverseSpeed);
         GetComponent<Rigidbody>().velocity = new Vector3(Mathf.Clamp(GetComponent<Rigidbody>().velocity.x, -5, 5), Mathf.Clamp(GetComponent<Rigidbody>().velocity.y, -5, 5), Mathf.Clamp(GetComponent<Rigidbody>().velocity.z, -5, 5));
     }
 
@@ -146,16 +160,12 @@ public class UnitAI : MonoBehaviour
 
     void Damage(int dam)
     {
-        Debug.Log("hit");
         hp -= dam;
     }
 
     void OnMouseDown()
     {
-        if (control.activeInHierarchy == false)
-            control.SetActive(true);
-        else
-            control.SetActive(false);
+        gameController.SendMessage("SelectUnit", gameObject);
     }
 
     void GoForwards()
@@ -163,6 +173,12 @@ public class UnitAI : MonoBehaviour
         forwards = true;
         backwards = false;
         retreat = false;
+        for(int i=0;i<wheels.Count;i++)
+        {
+            HingeJoint hinge = wheels[i].GetComponent<HingeJoint>();
+            JointMotor motor = hinge.motor;
+            motor.freeSpin = true;
+        }
     }
 
     void GoBackwards()
@@ -170,6 +186,12 @@ public class UnitAI : MonoBehaviour
         forwards = false;
         backwards = true;
         retreat = false;
+        for (int i = 0; i < wheels.Count; i++)
+        {
+            HingeJoint hinge = wheels[i].GetComponent<HingeJoint>();
+            JointMotor motor = hinge.motor;
+            motor.freeSpin = true;
+        }
     }
 
     void GoRetreat()
@@ -177,6 +199,12 @@ public class UnitAI : MonoBehaviour
         forwards = false;
         backwards = false;
         retreat = true;
+        for (int i = 0; i < wheels.Count; i++)
+        {
+            HingeJoint hinge = wheels[i].GetComponent<HingeJoint>();
+            JointMotor motor = hinge.motor;
+            motor.freeSpin = true;
+        }
     }
 
     void GoStop()
@@ -184,5 +212,11 @@ public class UnitAI : MonoBehaviour
         forwards = false;
         backwards = false;
         retreat = false;
+        for (int i = 0; i < wheels.Count; i++)
+        {
+            HingeJoint hinge = wheels[i].GetComponent<HingeJoint>();
+            JointMotor motor = hinge.motor;
+            motor.freeSpin = false;
+        }
     }
 }
